@@ -139,13 +139,14 @@ class AttrDataset(object):
 
     During selection data is only copied if necessary. If the slicing
     syntax is used the resulting dataset will share the samples with the
-    original dataset.
+    original dataset (here and below we compare .base against both ds.samples
+    and its .base for compatibility with NumPy < 1.7)
 
-    >>> sel1.samples.base is ds.samples.base
+    >>> sel1.samples.base in (ds.samples.base, ds.samples)
     False
-    >>> sel2.samples.base is ds.samples.base
+    >>> sel2.samples.base in (ds.samples.base, ds.samples)
     False
-    >>> sel3.samples.base is ds.samples.base
+    >>> sel3.samples.base in (ds.samples.base, ds.samples)
     True
 
     For feature selection the syntax is very similar they are just
@@ -170,7 +171,7 @@ class AttrDataset(object):
     array([[1, 2],
            [4, 5],
            [7, 8]])
-    >>> fsel.samples.base is ds.samples.base
+    >>> fsel.samples.base in (ds.samples.base, ds.samples)
     True
 
     Please note that simultaneous selection of samples and features is
@@ -670,6 +671,11 @@ def vstack(datasets, a=None):
     -------
     AttrDataset (or respective subclass)
     """
+    if not len(datasets):
+        raise ValueError('concatenation of zero-length sequences is impossible')
+    if not len(datasets) > 1:
+        # trivial vstack
+        return datasets[0]
     # fall back to numpy if it is not a dataset
     if not is_datasetlike(datasets[0]):
         return AttrDataset(np.vstack(datasets))
@@ -732,6 +738,11 @@ def hstack(datasets, a=None):
     # XXX Use CombinedMapper in here whenever it comes back
     #
 
+    if not len(datasets):
+        raise ValueError('concatenation of zero-length sequences is impossible')
+    if not len(datasets) > 1:
+        # trivial hstack
+        return datasets[0]
     # fall back to numpy if it is not a dataset
     if not is_datasetlike(datasets[0]):
         # we might get a list of 1Ds that would yield wrong results when

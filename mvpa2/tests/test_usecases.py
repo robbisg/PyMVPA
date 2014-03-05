@@ -16,7 +16,7 @@ from mvpa2.testing.tools import ok_, assert_array_equal, assert_true, \
         assert_array_almost_equal, SkipTest
 
 @reseed_rng()
-def _test_mcasey20120222():
+def _test_mcasey20120222():  # pragma: no cover
     # http://lists.alioth.debian.org/pipermail/pkg-exppsy-pymvpa/2012q1/002034.html
 
     # This one is conditioned on allowing # of samples to be changed
@@ -100,7 +100,7 @@ def test_sifter_superord_usecase():
     assert(np.mean(accs_regular) > .8)
     assert(np.mean(accs_super)   < .6)
 
-def _test_edmund_chong_20120907():
+def _test_edmund_chong_20120907():  # pragma: no cover
     # commented out to avoid syntax warnings while compiling
     # from mvpa2.suite import *
     from mvpa2.testing.datasets import datasets
@@ -280,8 +280,8 @@ def test_multiclass_pairs_svm_searchlight():
     ds.sa.targets = range(ntargets) * (nsamples//ntargets)
     ds.sa.chunks = np.arange(nsamples) // ntargets
     # and add some obvious signal where it is due
-    ds.samples[:, 55] += 10*ds.sa.targets   # for all 4 targets
-    ds.samples[:, 35] += 10*(ds.sa.targets % 2) # so we have conflicting labels
+    ds.samples[:, 55] += 15*ds.sa.targets   # for all 4 targets
+    ds.samples[:, 35] += 15*(ds.sa.targets % 2) # so we have conflicting labels
     # while 35 would still be just for 2 categories which would conflict
 
     mclf = MulticlassClassifier(LinearCSVMC(),

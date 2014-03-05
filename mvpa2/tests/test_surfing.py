@@ -48,7 +48,8 @@ class SurfTests(unittest.TestCase):
     'Ground truth' is whatever output is returned by the implementation
     as of mid-Aug 2012"""
 
-    def test_surf(self):
+    @with_tempfile('.asc', 'test_surf')
+    def test_surf(self, temp_fn):
         """Some simple testing with surfaces
         """
 
@@ -62,8 +63,6 @@ class SurfTests(unittest.TestCase):
 
         assert_true(v.shape == (102, 3))
         assert_true(f.shape == (200, 3))
-
-
 
         # another surface
         t = s * 10 + 2
@@ -148,10 +147,14 @@ class SurfTests(unittest.TestCase):
             assert_true(abs(v - ds2[k]) < eps)
 
         # test I/O (through ascii files)
-        fd, fn = tempfile.mkstemp('surf.asc', 'surftest'); os.close(fd)
-        surf.write(fn, s, overwrite=True)
-        s2 = surf.read(fn)
-        os.remove(fn)
+        surf.write(temp_fn, s, overwrite=True)
+        s2 = surf.read(temp_fn)
+
+        # test i/o and ensure that the loaded instance is trained
+        if externals.exists('h5py'):
+            h5save(temp_fn, s2)
+            s2 = h5load(temp_fn)
+
 
         assert_array_almost_equal(s.vertices, s2.vertices, 4)
         assert_array_almost_equal(s.faces, s2.faces, 4)
@@ -185,14 +188,12 @@ class SurfTests(unittest.TestCase):
 
         assert_true(s.nodes_on_border(0))
 
-    def test_surf_fs_asc(self):
+    @with_tempfile('.asc', 'test_surf')
+    def test_surf_fs_asc(self, temp_fn):
         s = surf.generate_sphere(5) * 100
 
-        fd, fn = tempfile.mkstemp('surf', 'test'); os.close(fd)
-        surf_fs_asc.write(fn, s, overwrite=True)
-
-        t = surf_fs_asc.read(fn)
-        os.remove(fn)
+        surf_fs_asc.write(temp_fn, s, overwrite=True)
+        t = surf_fs_asc.read(temp_fn)
 
         assert_array_almost_equal(s.vertices, t.vertices)
         assert_array_almost_equal(s.vertices, t.vertices)
@@ -220,7 +221,9 @@ class SurfTests(unittest.TestCase):
             eps = 666 if side_facing == 'm' else .001
             assert_true((abs(m.center_of_mass) < eps).all())
 
-    def test_volgeom(self):
+
+    @with_tempfile('.nii', 'test_vol')
+    def test_volgeom(self, temp_fn):
         sz = (17, 71, 37, 73) # size of 4-D 'brain volume'
         d = 2. # voxel size
         xo, yo, zo = -6., -12., -20. # origin
@@ -289,7 +292,7 @@ class SurfTests(unittest.TestCase):
         identities_input = [1, 2, 2, 0, 1, 0, 2, 0]
 
         # voxel indices to test
-        linrange = [0, 1, sz[2], sz[1] * sz[2]] + range(0, nv, nv / 100)
+        linrange = [0, 1, sz[2], sz[1] * sz[2]] + range(0, nv, nv // 100)
 
         lin = np.reshape(np.asarray(linrange), (-1,))
         ijk = vg.lin2ijk(lin)
@@ -329,13 +332,12 @@ class SurfTests(unittest.TestCase):
         # some I/O testing
 
         img = vg.get_empty_nifti_image()
-        fd, fn = tempfile.mkstemp('.nii', 'test'); os.close(fd)
-        img.to_filename(fn)
+        img.to_filename(temp_fn)
 
-        assert_true(os.path.exists(fn))
+        assert_true(os.path.exists(temp_fn))
 
         vg2 = volgeom.from_any(img)
-        vg3 = volgeom.from_any(fn)
+        vg3 = volgeom.from_any(temp_fn)
 
         assert_array_equal(vg.affine, vg2.affine)
         assert_array_equal(vg.affine, vg3.affine)
@@ -343,9 +345,8 @@ class SurfTests(unittest.TestCase):
         assert_equal(vg.shape[:3], vg2.shape[:3], 0)
         assert_equal(vg.shape[:3], vg3.shape[:3], 0)
 
-        os.remove(fn)
-
         assert_true(len('%s%r' % (vg, vg)) > 0)
+
 
     def test_volgeom_masking(self):
         maskstep = 5
@@ -527,7 +528,7 @@ class SurfTests(unittest.TestCase):
 
                     # index of node nearest to voxel i
                     src_anywhere = sel.target2nearest_source(i,
-                                            fallback_euclidian_distance=True)
+                                            fallback_euclidean_distance=True)
 
                     # coordinates of node nearest to voxel i
                     xyz_src = xyz[src_anywhere]
@@ -573,7 +574,6 @@ class SurfTests(unittest.TestCase):
                                  vg.contains_lin(lin_min))
 
 
-
     def test_surf_voxel_selection(self):
         vol_shape = (10, 10, 10)
         vol_affine = np.identity(4)
@@ -607,7 +607,7 @@ class SurfTests(unittest.TestCase):
         tested_double_features = False
         for param in params:
             distance_metric, radius, ncenters = param
-            srcs = range(0, nv, nv / (ncenters or nv))
+            srcs = range(0, nv, nv // (ncenters or nv))
             sel = surf_voxel_selection.voxel_selection(vs, radius,
                                             source_surf_nodes=srcs,
                                             distance_metric=distance_metric)
@@ -661,6 +661,8 @@ class SurfTests(unittest.TestCase):
 
 
                 # test I/O with surfaces
+                # XXX the @tempfile decorator only supports a single filename
+                #     hence this method does not use it
                 fd, outerfn = tempfile.mkstemp('outer.asc', 'test'); os.close(fd)
                 fd, innerfn = tempfile.mkstemp('inner.asc', 'test'); os.close(fd)
                 fd, volfn = tempfile.mkstemp('vol.nii', 'test'); os.close(fd)
@@ -725,6 +727,15 @@ class SurfTests(unittest.TestCase):
                                     # information about each near-disk-voxels
                                     add_fa=['center_distances',
                                             'grey_matter_position'])
+
+                # test i/o ensuring that when loading it is still trained
+                if externals.exists('h5py'):
+                    fd, qefn = tempfile.mkstemp('qe.hdf5', 'test'); os.close(fd)
+                    h5save(qefn, qe)
+                    qe = h5load(qefn)
+                    os.remove(qefn)
+
+
                 assert_false('ERROR' in repr(qe))   #  to check if repr works
                 voxelcounter = _Voxel_Count_Measure()
                 searchlight = Searchlight(voxelcounter, queryengine=qe, roi_ids=keys, nproc=1,
@@ -821,7 +832,7 @@ class SurfTests(unittest.TestCase):
 
     def test_agreement_surface_volume(self):
         '''test agreement between volume-based and surface-based
-        searchlights when using euclidian measure'''
+        searchlights when using euclidean measure'''
 
         #import runner
         def sum_ds(ds):
@@ -859,7 +870,7 @@ class SurfTests(unittest.TestCase):
         sel = surf_voxel_selection.voxel_selection(v, float(radius),
                                         source_surf=source_surf,
                                         source_surf_nodes=source_surf_nodes,
-                                        distance_metric='euclidian')
+                                        distance_metric='euclidean')
 
         qe = queryengine.SurfaceVerticesQueryEngine(sel)
         sl = Searchlight(sum_ds, queryengine=qe)
@@ -867,6 +878,95 @@ class SurfTests(unittest.TestCase):
 
         # check whether they give the same results
         assert_array_equal(r.samples, m.samples)
+
+
+    @with_tempfile('.h5py', 'qe')
+    def test_surf_queryengine(self, qefn):
+        s = surf.generate_plane((0, 0, 0), (0, 1, 0), (0, 0, 1), 4, 5)
+
+        # add scond layer
+        s2 = surf.merge(s, (s + (.01, 0, 0)))
+
+        ds = Dataset(samples=np.arange(20)[np.newaxis],
+                    fa=dict(node_indices=np.arange(39, 0, -2)))
+
+        # add more features (with shared node indices)
+        ds3 = hstack((ds, ds, ds))
+
+        radius = 2.5
+
+        # Note: sweepargs it not used to avoid re-generating the same
+        #       surface and dataset multiple times.
+        for distance_metric in ('euclidean', 'dijkstra', '<illegal>', None):
+            builder = lambda: queryengine.SurfaceQueryEngine(s2, radius,
+                                                             distance_metric)
+            if distance_metric in ('<illegal>', None):
+                assert_raises(ValueError, builder)
+                continue
+
+            qe = builder()
+
+            # test i/o and ensure that the untrained instance is not trained
+            if externals.exists('h5py'):
+                fd, qefn = tempfile.mkstemp('qe.hdf5', 'test'); os.close(fd)
+                h5save(qefn, qe)
+                qe = h5load(qefn)
+                os.remove(qefn)
+
+
+            # untrained qe should give errors
+            assert_raises(ValueError, lambda:qe.ids)
+            assert_raises(ValueError, lambda:qe.query_byid(0))
+
+            # node index out of bounds should give error
+            ds_ = ds.copy()
+            ds_.fa.node_indices[0] = 100
+            assert_raises(ValueError, lambda: qe.train(ds_))
+
+            # lack of node indices should give error
+            ds_.fa.pop('node_indices')
+            assert_raises(ValueError, lambda: qe.train(ds_))
+
+
+            # train the qe
+            qe.train(ds3)
+
+            # test i/o and ensure that the loaded instance is trained
+            if externals.exists('h5py'):
+                h5save(qefn, qe)
+                qe = h5load(qefn)
+
+            for node in np.arange(-1, s2.nvertices + 1):
+                if node < 0 or node >= s2.nvertices:
+                    assert_raises(KeyError, lambda: qe.query_byid(node))
+                    continue
+
+                feature_ids = np.asarray(qe.query_byid(node))
+
+                # node indices relative to ds
+                base_ids = feature_ids[feature_ids < 20]
+
+                # should have multiples of 20
+                assert_equal(set(feature_ids),
+                             set((base_ids[np.newaxis].T + \
+                                            [0, 20, 40]).ravel()))
+
+
+
+                node_indices = list(s2.circlearound_n2d(node,
+                                    radius, distance_metric or 'dijkstra'))
+
+                fa_indices = [fa_index for fa_index, node in
+                                    enumerate(ds3.fa.node_indices)
+                                    if node in node_indices]
+
+
+                assert_equal(set(feature_ids), set(fa_indices))
+
+            # smoke tests
+            assert_true('SurfaceQueryEngine' in '%s' % qe)
+            assert_true('SurfaceQueryEngine' in '%r' % qe)
+
 
     def test_surf_pairs(self):
         o, x, y = map(np.asarray, [(0, 0, 0), (0, 1, 0), (1, 0, 0)])
@@ -895,7 +995,7 @@ class SurfTests(unittest.TestCase):
         # bigger one
         pw = s.pairwise_near_nodes(1.4)
         for i in xrange(n ** 2):
-            p, q = i / n, i % n
+            p, q = i // n, i % n
             offsets = sum(([] if q == 0 else [-1],
                          [] if q == n - 1 else [+1],
                          [] if p == 0 else [-n],
@@ -909,8 +1009,8 @@ class SurfTests(unittest.TestCase):
 
         assert_true(len(pw) == 0)
 
-
-    def test_surf_gifti(self):
+    @with_tempfile('surf.surf.gii', 'surftest')
+    def test_surf_gifti(self, fn):
             # From section 14.4 in GIFTI Surface Data Format Version 1.0
             # (with some adoptions)
 
@@ -972,7 +1072,7 @@ class SurfTests(unittest.TestCase):
 </Data>
 </DataArray>
 </GIFTI>'''
-            _, fn = tempfile.mkstemp('surf.surf.gii', 'surftest')
+
             with open(fn, 'w') as f:
                 f.write(test_data)
 
@@ -980,7 +1080,6 @@ class SurfTests(unittest.TestCase):
             s = surf.read(fn)
             surf.write(fn, s)
             s = surf.read(fn)
-            os.unlink(fn)
 
             v = np.zeros((4, 3))
             v[0, 0] = 10.5
@@ -1006,9 +1105,10 @@ class _Voxel_Count_Measure(Measure):
         return dset.nfeatures
 
 
-def suite():
+def suite():  # pragma: no cover
     """Create the suite"""
     return unittest.makeSuite(SurfTests)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import runner
+    runner.run()

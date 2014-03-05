@@ -5,24 +5,23 @@
 PyMVPA is a Python_ package intended to ease statistical learning analyses of
 large datasets. It offers an extensible framework with a high-level interface
 to a broad range of algorithms for classification, regression, feature
-selection, data import and export. While it is not limited to the neuroimaging
-domain, it is eminently suited for such datasets. PyMVPA is truly free software
-(in every respect) and additionally requires nothing but free-software to run.
+selection, data import and export. It is designed to integrate well with
+related software packages, such as scikit-learn_, and MDP_. While it is not
+limited to the neuroimaging domain, it is eminently suited for such datasets.
+PyMVPA is free software and requires nothing but free-software to run.
 
 PyMVPA stands for **M**\ ulti\ **V**\ ariate **P**\ attern **A**\ nalysis
 (:term:`MVPA`) in **Py**\ thon.
 
 .. _Python: http://www.python.org
 
-
-
 .. raw:: html
 
  <table style="border-style:none;overflow:scroll">
   <tr>
    <td>
-    <a href="download.html">
-     <img alt="Download" src="_static/download_icon.jpg" title="Download and Installation" />
+    <a href="installation.html">
+     <img alt="Installation" src="_static/download_icon.jpg" title="Download and Installation" />
     </a>
    </td>
    <td>
@@ -42,50 +41,27 @@ PyMVPA stands for **M**\ ulti\ **V**\ ariate **P**\ attern **A**\ nalysis
    </td>
   </tr>
   <tr>
-    <td style="text-align:center"><a href="download.html">Download</a></td>
+    <td style="text-align:center"><a href="installation.html">Installation</a></td>
     <td style="text-align:center"><a href="tutorial.html">Tutorial</a></td>
     <td style="text-align:center"><a href="docoverview.html">Documentation</a></td>
     <td style="text-align:center"><a href="support.html">Support</a></td>
   </tr>
  </table>
 
-
 News
 ====
 
 .. raw:: html
 
- <script src="http://widgets.twimg.com/j/2/widget.js"></script>
- <script>
- new TWTR.Widget({
-   version: 2,
-   type: 'profile',
-   rpp: 4,
-   interval: 6000,
-   width: 'auto',
-   height: 300,
-   theme: {
-     shell: {
-       background: '#e6e6e6',
-       color: '#000000'
-     },
-     tweets: {
-       background: '#ffffff',
-       color: '#525052',
-       links: '#993e4d'
-     }
-   },
-   features: {
-     scrollbar: false,
-     loop: false,
-     live: false,
-     hashtags: true,
-     timestamp: true,
-     avatars: true,
-     behavior: 'all'
-   }
- }).render().setUser('pymvpa').start();
- </script>
+ <a class="twitter-timeline" href="https://twitter.com/pymvpa"
+    data-widget-id="434978943293083648"
+    data-link-color="#820430"
+    height="150px"
+    data-show-replies="false"
+    data-chrome="noheader nofooter transparent">Tweets by @pymvpa</a>
+ <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+.. _twitter: http://twitter.com/pymvpa
 
 
 Contributing

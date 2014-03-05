@@ -52,7 +52,7 @@ Python 3.x is supported as well, but not as widely used (yet), and many
 recommend Python 2.7 for production, but Python 2.6 should work equally well.
 
 Any machine which has Python 2.X available can be used for PyMVPA-based
-processing (see :ref:`Download section <chap_download>` on how to deploy
+processing (see :ref:`chap_installation>` on how to deploy
 PyMVPA on your system). Any GNU/Linux distribution already comes with Python
 by default. The Python website offers `installers for Windows and MacOS X`_.
 
@@ -65,7 +65,7 @@ For Windows, `Python(x,y)`_ matches these requirements.  For MacOS X, the
 MacPorts_ project offers a large variety of Python packages (including
 PyMVPA).
 
-.. _Python(x,y): http://www.pythonxy.com
+.. _Python(x,y): https://code.google.com/p/pythonxy/
 .. _MacPorts: http://www.macports.org
 
 The ideal environment is, however, the Debian_ operating system. Debian
@@ -104,7 +104,7 @@ http://en.wikibooks.org/wiki/Non-Programmer's_Tutorial_for_Python_2.6
   Basic from-scratch introduction into Python. This should give you the basics,
   even if you had *no* prior programming experience.
 
-http://www.ibiblio.org/swaroopch/byteofpython/read/
+http://swaroopch.com/notes/python/
 
   From the author:
 

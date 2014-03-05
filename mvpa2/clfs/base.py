@@ -6,8 +6,7 @@
 #   copyright and license terms.
 #
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
-"""Base class for all XXX learners: classifiers and regressions.
-"""
+"""Plumbing for all learners (classifiers and regressions)"""
 
 __docformat__ = 'restructuredtext'
 
@@ -254,9 +253,18 @@ class Classifier(Learner):
                 self.__changedData_isset = False
             predictions = self.predict(dataset)
             ca.reset_changed_temporarily()
-            ca.training_stats = self.__summary_class__(
-                targets=dataset.sa[self.get_space()].value,
-                predictions=predictions)
+            targets = dataset.sa[self.get_space()].value
+            if is_datasetlike(predictions) and (self.get_space() in predictions.fa):
+                # e.g. in case of pair-wise uncombined results - provide
+                # stats per each of the targets pairs
+                prediction_targets = predictions.fa[self.get_space()].value
+                ca.training_stats = dict(
+                    (t, self.__summary_class__(
+                        targets=targets, predictions=predictions.samples[:, i]))
+                    for i, t in enumerate(prediction_targets))
+            else:
+                ca.training_stats = self.__summary_class__(
+                    targets=targets, predictions=predictions)
 
 
     def summary(self):
@@ -426,7 +434,14 @@ class Classifier(Learner):
         pred = self.predict(ds)
         tattr = self.get_space()
         # return the predictions and the targets in a dataset
-        return Dataset(pred, sa={tattr: ds.sa[tattr]})
+        if isinstance(pred, Dataset):
+            # it is already a dataset, e.g. as if we did not
+            # use any combiner for MulticlassClassifier
+            # to look at each pair
+            pred.sa[tattr] = ds.sa[tattr]
+            return pred
+        else:
+            return Dataset(pred, sa={tattr: ds.sa[tattr]})
 
 
     # XXX deprecate ???

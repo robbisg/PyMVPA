@@ -110,11 +110,13 @@ class Surface(object):
 
         if not hasattr(self, '_n2f'):
             # run the first time this function is called
-            n2f = collections.defaultdict(list)
+            n2f = dict()
             for i in xrange(self._nf):
                 fi = self._f[i]
                 for j in xrange(3):
                     p = fi[j]
+                    if not p in n2f:
+                        n2f[p] = []
                     n2f[p].append(i)
             self._n2f = n2f
 
@@ -245,7 +247,7 @@ class Surface(object):
 
 
         if not hasattr(self, '_nbrs'):
-            nbrs = collections.defaultdict(dict)
+            nbrs = dict()
             for i in xrange(self._nf):
                 fi = self._f[i]
 
@@ -265,6 +267,11 @@ class Surface(object):
                            + (pv[2] - qv[2]) * (pv[2] - qv[2]))
 
                     dist = math.sqrt(sqdist)
+                    if not p in nbrs:
+                        nbrs[p] = dict()
+                    if not q in nbrs:
+                        nbrs[q] = dict()
+
                     nbrs[q][p] = dist
                     nbrs[p][q] = dist
 
@@ -759,7 +766,7 @@ class Surface(object):
         -------
         source_target2distance: dict
             A dictionary so that source_target2distance[i,j]=d means that the
-            Euclidian distance between nodes i and j is d, where i in src
+            Euclidean distance between nodes i and j is d, where i in src
             and j in trg.
 
         Notes
@@ -913,44 +920,59 @@ class Surface(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(prefixes_))
 
     def __str__(self):
-        s = ['%r' % self]
+        # helper function to print coordinates. f should be np.min or np.max
+        func_coord2str = lambda f: '%.3f %.3f %.3f' % tuple(
+                                                        f(self.vertices, 0))
 
-        nfirst = 3 # how many of first and last nodes and faces to show
+        return '%s(%d vertices (range %s ... %s), %d faces)' % (
+                        self.__class__.__name__,
+                        self.nvertices,
+                        func_coord2str(np.min),
+                        func_coord2str(np.max),
+                        self.nfaces)
 
-        def getrange(n, nfirst=nfirst):
-            # gets the indices of first and last nodes (or all, if there
-            # are only a few)
-            if n < 2 * nfirst:
-                return xrange(n)
-            else:
-                r = range(nfirst)
-                r.extend(range(n - nfirst, n))
-                return r
-
-        def getlist(vs, prefix):
-            s = []
-            n = vs.shape[0]
-            for i in getrange(n):
-                s.append('%s %8d: %r' % (prefix, i, vs[i]))
-            return s
-
-        s.extend(getlist(self._v, "vertex"))
-        s.extend(getlist(self._f, "face"))
-
-        return "\n".join(s)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
 
-        return (np.all(np.abs(self.vertices - other.vertices) < _COORD_EPS)
+        sv = self.vertices
+        ov = other.vertices
+
+        # must be identical where NaNs occur
+        if np.any(np.logical_xor(np.isnan(sv), np.isnan(ov))):
+            return False
+
+        # difference in vertices
+        v = np.abs(self.vertices - other.vertices)
+
+        return (np.all(np.logical_or(v < _COORD_EPS, np.isnan(v)))
                 and np.all(self.faces == other.faces))
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __reduce__(self):
-        return (self.__class__, (self._v, self._f))
+        # these are lazily computed on the first call to e.g. node2faces
+        lazy_keys = ('_n2f', '_f2el', '_v2ael', '_e2f', '_nbrs')
+        lazy_dict = dict()
+        # TODO: add in efficient way to translate these dictionaries
+        #       to something like a numpy array, and implement the 
+        #       translation back. Types for these dicts:
+        #       _n2f: int -> [int]
+        #       _f2el: array
+        #       _v2ael: array
+        #       _e2f: (int,int) -> int
+        #       _nbrs: int -> (int -> float)
+        #       
+        # For now this this functionaltiy is switched off,
+        # because pickling it (also with hdf5) takes a long time
+        #for lazy_key in lazy_keys:
+        #    if lazy_key in self.__dict__:
+        #        lazy_dict[lazy_key] = self.__dict__[lazy_key]
+
+
+        return (self.__class__, (self._v, self._f), lazy_dict)
 
     def same_topology(self, other):
         '''
@@ -1252,8 +1274,7 @@ class Surface(object):
         # if this fails, then we just continue normally
         if self.same_topology(highres):
             d = np.sum((x - y) ** 2, axis=1) ** .5
-
-            if all(d < epsilon):
+            if all(d[np.logical_not(np.isnan(d))] < epsilon):
                 for i in xrange(nx):
                     mapping[i] = i
                 return mapping
@@ -1380,7 +1401,7 @@ class Surface(object):
         if self.same_topology(highres):
             d = np.sum((x - y) ** 2, axis=1) ** .5
 
-            if all(d < epsilon):
+            if all(d[np.logical_not(np.isnan(d))] < epsilon):
                 for i in xrange(nx):
                     mapping[i] = i
                 return mapping

@@ -51,6 +51,14 @@ Institutions Where PyMVPA Is Known To Be Used
 Studies employing PyMVPA
 ========================
 
+2014
+----
+
+* :ref:`Hanke et al., Scientific Data (in press) <HBI+14>`. A high-resolution
+  7-Tesla fMRI dataset from complex natural stimulation with an audio movie.
+* :ref:`Helfinstein et al. PNAS (2014) <HSC+14>`. Predicting risky choices from
+  brain activity patterns.
+
 2013
 ----
 
