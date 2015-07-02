@@ -403,7 +403,8 @@ def summary_targets(dataset, targets_attr='targets', chunks_attr='chunks',
         for i, l in enumerate(u):
             d = {'  ' + name1 : l}
             d.update(dict([ (k, stats[k][i]) for k in stats.keys()]))
-            table.append( [ ('%.3g', '%s')[isinstance(d[e], basestring)]
+            table.append( [ ('%.3g', '%s')[isinstance(d[e], basestring)
+                                           or d[e] == None]
                             % d[e] for e in entries] )
         return '\nSummary for %s across %s\n' % (name1, name2) \
                + table2string(table)
@@ -419,7 +420,7 @@ class SequenceStats(dict):
     """Simple helper to provide representation of sequence statistics
 
     Matlab analog:
-    http://cfn.upenn.edu/aguirre/code/matlablib/mseq/mtest.m
+    https://cfn.upenn.edu/aguirre/wiki/public:m_sequences_code:mtest.m
 
     WARNING: Experimental -- API might change without warning!
     Current implementation is ugly!

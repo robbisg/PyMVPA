@@ -29,6 +29,7 @@ computational models of perception (Connolly et al., 2012).
 
 import numpy as np
 import pylab as pl
+from os.path import join as pjoin
 from mvpa2 import cfg
 
 """
@@ -39,8 +40,9 @@ from regions on the ventral and occipital surface of the brain.
 """
 
 # load dataset -- ventral and occipital ROIs
-from mvpa2.misc.data_generators import load_datadb_tutorial_data
-ds = load_datadb_tutorial_data(roi=(15, 16, 23, 24, 36, 38, 39, 40, 48))
+from mvpa2.datasets.sources.native import load_tutorial_data
+datapath = pjoin(cfg.get('location', 'tutorial data'), 'haxby2001')
+ds = load_tutorial_data(roi=(15, 16, 23, 24, 36, 38, 39, 40, 48))
 
 """
 We only do minimal pre-processing: linear trend removal and Z-scoring all voxel
@@ -142,7 +144,7 @@ all data into a single sample per stimulation conditions, per ``chunk``. A
 chunk in this context indicates a complete fMRI recording run.
 """
 
-# more interesting: let's look at the stability of similarity sturctures
+# more interesting: let's look at the stability of similarity structures
 # across experiment runs
 # mean condition samples, as before, but now individually for each run
 mtcgs = mean_group_sample(['targets', 'chunks'])
@@ -161,7 +163,7 @@ sl_cons = sphere_searchlight(dscm, 2)
 slres_cons = sl_cons(mtcds)
 
 """
-Now we can determine the most brain location with the most stable
+Now we can determine the brain location with the most stable
 dissimilarity matrix.
 """
 
@@ -203,7 +205,7 @@ it onto the brain anatomy.
 # plot the spatial distribution using NiPy
 vol = ds.a.mapper.reverse1(slres_tdsm.samples[0])
 import nibabel as nb
-anat = nb.load('datadb/tutorial_data/tutorial_data/data/anat.nii.gz')
+anat = nb.load(pjoin(datapath, 'sub001', 'anatomy', 'highres001.nii.gz'))
 
 from nipy.labs.viz_tools.activation_maps import plot_map
 pl.figure(figsize=(15,4))
@@ -211,15 +213,15 @@ sp = pl.subplot(121)
 pl.title('Distribution of target similarity structure correlation')
 slices = plot_map(
             vol,
-            ds.a.imghdr.get_best_affine(),
-             cut_coords=np.array((12,-42,-20)),
-             threshold=.5,
-             cmap="bwr",
-             vmin=0,
-             vmax=1.,
-             axes=sp,
-             anat=anat.get_data(),
-             anat_affine=anat.get_affine(),
+            ds.a.imgaffine,
+            cut_coords=np.array((12,-42,-20)),
+            threshold=.5,
+            cmap="bwr",
+            vmin=0,
+            vmax=1.,
+            axes=sp,
+            anat=anat.get_data(),
+            anat_affine=anat.get_affine(),
          )
 img = pl.gca().get_images()[1]
 cax = pl.axes([.05, .05, .05, .9])

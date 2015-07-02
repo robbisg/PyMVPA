@@ -405,7 +405,7 @@ def table2string(table, out=None):
         table[i] += [''] * (Nelements_max - len(table_))
 
     # figure out lengths within each column
-    atable = np.asarray(table)
+    atable = np.asarray(table).astype(str)
     # eat whole entry while computing width for @w (for wide)
     markup_strip = re.compile('^@([lrc]|w.*)')
     col_width = [ max( [len(markup_strip.sub('', x))
@@ -558,6 +558,15 @@ def _str(obj, *args, **kwargs):
     # finally wrap in <> and return
     # + instead of '%s' for bits of speedup
     return '<' + s + '>'
+
+
+def safe_str(obj):
+    """Return string of an object even if str() call fails
+    """
+    try:
+        return str(obj)
+    except Exception as exc:
+        return "%s(FAILED str due to %s)" % (type(obj), str(exc))
 
 
 def borrowdoc(cls, methodname=None):
