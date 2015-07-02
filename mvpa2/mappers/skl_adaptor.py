@@ -85,8 +85,19 @@ class SKLTransformer(Mapper):
             # sklearn support fit and transform at the same time, which might
             # be a lot faster, but we only do that, if the mapper is not
             # trained already
+            
+            #out = tf.fit_transform(ds.samples, self._get_y(ds))
             out = tf.fit_transform(ds.samples, self._get_y(ds))
             self._set_trained()
         else:
-            out = tf.transform(ds.samples, self._get_y(ds))
-        return out
+            #out = tf.transform(ds.samples, self._get_y(ds))
+            out = tf.transform(ds.samples)#, y=self._get_y(ds))
+        out_ds = self._build_ds(ds, out)
+        return out_ds
+        
+    def _build_ds(self, ds, out):
+        
+        out_ds = ds.copy()
+        out_ds.samples = out
+        
+        return out_ds

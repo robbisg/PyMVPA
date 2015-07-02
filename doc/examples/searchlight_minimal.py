@@ -27,11 +27,19 @@ draft of a complete analysis.
 
 First import a necessary pieces of PyMVPA -- this time each bit individually.
 """
-
+from mvpa2.base import warning, cfg, externals
 import numpy as np
-
+import sys
+print('\n'.join(sorted(sys.path)))
 from mvpa2.generators.partition import OddEvenPartitioner
+
+from mvpa2 import cfg
+
+print cfg.defaults
+cfg.reload()
+
 from mvpa2.clfs.svm import LinearCSVMC
+print externals.exists('libsvm')
 from mvpa2.measures.base import CrossValidation
 from mvpa2.measures.searchlight import sphere_searchlight
 from mvpa2.testing.datasets import datasets
