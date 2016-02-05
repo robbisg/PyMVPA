@@ -67,7 +67,7 @@ class SupportFxTests(unittest.TestCase):
         # conversion
         self.assertTrue(ev.as_descrete_time(dt=2).items() == [('onset', 1)])
         evc = ev.as_descrete_time(dt=2, storeoffset=True)
-        self.assertTrue(evc.has_key('offset'))
+        self.assertTrue('offset' in evc)
         self.assertTrue(evc['offset'] == 0.5)
 
         # same with duration included
@@ -217,6 +217,10 @@ class SupportFxTests(unittest.TestCase):
         """
         SV = SmartVersion
 
+        self.assertEqual(SmartVersion(None), SmartVersion(None))
+        self.assertRaises(ValueError, SmartVersion(None).__cmp__, SmartVersion('0'))
+        self.assertRaises(ValueError, SmartVersion('0').__cmp__, SmartVersion(None))
+
         for v1_, v2_ in (
             ('0.0.1', '0.0.2'),
             ('0.0.1', '0.1'),
@@ -277,6 +281,19 @@ def test_limit_filter():
     assert_array_equal(get_limit_filter({'chunks': [3, 1]}, ds.sa),
                        np.logical_or(ds.sa.chunks == 3,
                                      ds.sa.chunks == 1))
+
+    # if a list
+    assert_array_equal(get_limit_filter('chunks', ds.sa),
+                       get_limit_filter(['chunks'], ds.sa))
+    assert_array_equal(get_limit_filter('chunks', ds.sa),
+                       get_limit_filter(['chunks']*2, ds.sa))
+    lf = get_limit_filter(['chunks', 'targets'], ds.sa)
+    assert_array_equal(len(np.unique(lf)), len(ds.UC) * len(ds.UT))
+    for uv in np.unique(lf):
+        for a in ['chunks', 'targets']:
+            # within each 'block' values will be unique
+            assert_equal(len(np.unique(ds.sa[a].value[lf == uv])), 1)
+
 
 def test_mask2slice():
     slc = np.repeat(False, 5)

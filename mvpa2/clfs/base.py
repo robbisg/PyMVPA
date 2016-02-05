@@ -516,7 +516,7 @@ class Classifier(Learner):
             if self.trained:
                 self.untrain()
             ca = self.ca
-            if not value and ca.has_key('retrained'):
+            if not value and 'retrained' in ca:
                 ca.pop('retrained')
                 ca.pop('repredicted')
             if value:
@@ -662,7 +662,7 @@ class Classifier(Learner):
                       "Do not use re(train,predict) on non-retrainable %s" % \
                       self
 
-            if kwargs.has_key('params') or kwargs.has_key('kernel_params'):
+            if 'params' in kwargs or 'kernel_params' in kwargs:
                 raise ValueError, \
                       "Retraining for changed params not working yet"
 

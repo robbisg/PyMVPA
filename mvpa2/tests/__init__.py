@@ -138,7 +138,6 @@ def collect_unit_tests(verbosity=1):
 
     __optional_tests = [ ('scipy', 'ridge'),
                          ('scipy', 'gpr'),
-                         (['cPickle', 'gzip'], 'hamster'),
                        ]
 
     # and now for the optional tests
@@ -194,6 +193,7 @@ def collect_nose_tests(verbosity=1):
 
         # Classifiers
         'test_multiclf',
+        'test_smlr',
 
         # Misc supporting
         'test_neighborhood',
@@ -217,12 +217,10 @@ def collect_nose_tests(verbosity=1):
         'test_compound',
         'test_enet',
         'test_glmmapper',
-        'test_gpr',
         'test_lars',
         'test_glmnet',
         'test_kernel',
         'test_svmkernels',
-        'test_ridge',
         'test_senses',
 
         # Algorithms
@@ -234,7 +232,6 @@ def collect_nose_tests(verbosity=1):
         'test_iohelpers',
         'test_hdf5',
         'test_hdf5_clf',
-        'test_hamster',
         'test_openfmri',
 
         # Measures
@@ -242,6 +239,7 @@ def collect_nose_tests(verbosity=1):
         'test_datameasure',
         'test_dcov',
         'test_corrstability',
+        'test_fxmeasure',
         'test_rsa',
 
         # Misc

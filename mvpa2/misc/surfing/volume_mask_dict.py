@@ -98,16 +98,18 @@ class VolumeMaskDictionary(Mapping):
         # it is generated.
         self._lazy_nbr2src = None
 
-    def __repr__(self, prefixes=[]):
+    def __repr__(self, prefixes=None):
+        if prefixes is None:
+            prefixes = []
         prefixes_ = ['vg=%r' % self._volgeom,
                     'source=%r' % self._source] + prefixes
 
-        if not self._meta is None:
+        if self._meta is not None:
             prefixes_.append('meta=%r' % self._meta)
 
-        if not self._src2nbr is None:
+        if self._src2nbr is not None:
             prefixes_.append('src2nbr=%r' % self._src2nbr)
-        if not self._src2aux is None:
+        if self._src2aux is not None:
             prefixes_.append('src2aux=%r' % self._src2aux)
 
         return "%s(%s)" % (self.__class__.__name__, ','.join(prefixes_))
@@ -146,7 +148,7 @@ class VolumeMaskDictionary(Mapping):
 
         self._src2nbr[src] = np.asarray(nbrs, dtype=np.int)
 
-        if not self._lazy_nbr2src is None:
+        if self._lazy_nbr2src is not None:
             self._add_target2source(src)
 
         if aux:
@@ -955,16 +957,20 @@ def _dict_with_arrays2array_tuple(d):
         return pt == qt or np.issubdtype(pt, qt)
 
 
+
     for i, (key, length) in enumerate(zip(keys, lengths)):
         v = d[key]
 
         if i == 0:
+            value_dtypes=[d[key].dtype for key in keys]
+            common_dtype=np.find_common_type(value_dtypes,[])
+
+            if common_dtype==np.dtype('O'):
+                raise TypeError('Elements for auxilery attribute "%s" '
+                                    'have different types' % key)
+
             # allocate space for all data in d
-            data = np.zeros((ntotal,), dtype=v.dtype)
-        elif v.dtype != data.dtype:
-            # ensure all values in the dict have the same datatype
-            raise ValueError('Type mismatch for keys %s and %s: %s != %s' %
-                                (keys[0], key, data.dtype, v.dtype))
+            data = np.zeros((ntotal,), dtype=common_dtype)
 
         idxs = np.arange(length) + pos
         data[idxs] = v

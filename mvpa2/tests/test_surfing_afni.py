@@ -176,13 +176,20 @@ class SurfTests(unittest.TestCase):
 
 
         # test NIML I/O
-        fn = 'tmp.niml.dset'
         niml.write(fn, ds)
+
+        # remove extra fields added when reading the file
         ds2 = niml.from_any(fn)
         ds2.a.pop('history')
         ds2.a.pop('filename')
         ds2.sa.pop('labels')
         ds2.sa.pop('stats')
+
+        # NIML does not support int64, only int32;
+        # compare equality of values in samples by setting the
+        # datatype the same as in the input (int32 or int64 depending
+        # on the platform)
+        ds2.samples = np.asarray(ds2.samples, dtype=ds.samples.dtype)
         assert_datasets_equal(ds, ds2)
 
 
@@ -429,7 +436,7 @@ class SurfTests(unittest.TestCase):
         dsets = []
         for v, i in zip(values, indices):
             dset = Dataset(v)
-            if not i is None:
+            if i is not None:
                 dset.fa['node_indices'] = i
             dsets.append(dset)
 

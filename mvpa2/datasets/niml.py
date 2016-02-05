@@ -43,7 +43,18 @@ _PYMVPA_PREFIX = 'PYMVPA'
 _PYMVPA_SEP = '_'
 
 
-def from_niml(dset, fa_labels=[], sa_labels=[], a_labels=[]):
+
+def _as_vector_if_matrix_with_single_column(x):
+    '''Helper function'''
+    if isinstance(x, np.ndarray) and \
+                    len(x.shape) == 2 and x.shape[1] == 1:
+        return x.ravel()
+    else:
+        return x
+
+
+
+def from_niml(dset, fa_labels=None, sa_labels=None, a_labels=None):
     '''Convert a NIML dataset to a Dataset
 
     Parameters
@@ -63,6 +74,12 @@ def from_niml(dset, fa_labels=[], sa_labels=[], a_labels=[]):
     dataset: mvpa2.base.Dataset
         a PyMVPA Dataset
     '''
+    if fa_labels is None:
+        fa_labels = []
+    if sa_labels is None:
+        sa_labels = []
+    if a_labels is None:
+        a_labels = []
 
     # check for singleton element
     if type(dset) is list and len(dset) == 1:
@@ -112,7 +129,7 @@ def from_niml(dset, fa_labels=[], sa_labels=[], a_labels=[]):
             if len(k_split) > 2:
                 infix = k_split[1].lower()
                 collection = infix2collection.get(infix, None)
-                if not collection is None:
+                if collection is not None:
                     short_k = _PYMVPA_SEP.join(k_split[2:])
                     expected_length = infix2length.get(infix, None)
                     if expected_length:
@@ -129,10 +146,14 @@ def from_niml(dset, fa_labels=[], sa_labels=[], a_labels=[]):
                             raise ValueError("Unexpected length: %d != %d" %
                                              (expected_length, len(v)))
 
+                        v = _as_vector_if_matrix_with_single_column(v)
+
                         v = ArrayCollectable(v, length=expected_length)
 
                     collection[short_k] = v
                     continue
+
+        v = _as_vector_if_matrix_with_single_column(v)
 
         found_label = False
 
@@ -144,6 +165,7 @@ def from_niml(dset, fa_labels=[], sa_labels=[], a_labels=[]):
 
         if found_label:
             continue
+
 
         # try to be smart and deduce this from dimensions.
         # this only works if nfeatures!=nsamples otherwise it would be
@@ -169,6 +191,7 @@ def from_niml(dset, fa_labels=[], sa_labels=[], a_labels=[]):
     return ds
 
 
+
 def to_niml(ds):
     '''Convert a Dataset to a NIML dataset
 
@@ -190,12 +213,12 @@ def to_niml(ds):
 
     node_indices_labels = ('node_indices', 'center_ids', 'ids', 'roi_ids')
     node_indices = _find_node_indices(ds, node_indices_labels)
-    if not node_indices is None:
+    if node_indices is not None:
         dset['node_indices'] = node_indices
 
     sample_labels = ('labels', 'targets')
     labels = _find_sample_labels(ds, sample_labels)
-    if not labels is None:
+    if labels is not None:
         dset['labels'] = labels
 
     attr_labels = ('a', 'fa', 'sa')
@@ -223,6 +246,7 @@ def to_niml(ds):
             dset[long_key] = v
 
     return dset
+
 
 
 def hstack(dsets, pad_to_feature_index=None, hstack_method='drop_nonunique',
@@ -323,6 +347,7 @@ def hstack(dsets, pad_to_feature_index=None, hstack_method='drop_nonunique',
     return hstack_dset
 
 
+
 def _find_sample_labels(dset, sample_labels):
     '''Helper function to find labels in this dataset.
     Looks for any in sample_labels and returns the first one
@@ -350,6 +375,7 @@ def _find_sample_labels(dset, sample_labels):
             break
 
     return None if use_label is None else sample_label_list
+
 
 
 def _find_node_indices(dset, node_indices_labels):
@@ -387,6 +413,7 @@ def _find_node_indices(dset, node_indices_labels):
     return None if use_label is None else node_indices_int
 
 
+
 def write(fn, ds, form='binary'):
     '''Write a Dataset to a file in NIML format
 
@@ -401,6 +428,7 @@ def write(fn, ds, form='binary'):
     '''
     niml_ds = to_niml(ds)
     niml_dset.write(fn, niml_ds, form=form)
+
 
 
 def read(fn):
@@ -446,6 +474,7 @@ def read(fn):
                 pass
 
         raise ValueError("Unable to read %s with unclear extension" % fn)
+
 
 
 def from_any(x):
