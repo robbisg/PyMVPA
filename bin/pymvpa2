@@ -39,7 +39,8 @@ enabled_cmds = [
   'select',
   'atlaslabeler',
   'exec',
-  'ofmotionqc',
+  'scatter',
+  'plotmotionqc',
   'ttest',
 ]
 

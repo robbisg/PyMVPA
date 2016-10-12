@@ -18,6 +18,7 @@ __docformat__ = 'restructuredtext'
 
 import numpy as np
 from mvpa2.base import externals
+from mvpa2.support.utils import deprecated
 
 if __debug__:
     from mvpa2.base import debug, warning
@@ -39,10 +40,15 @@ def absmin_distance(a, b):
     return max(abs(a-b))
 
 
-def manhatten_distance(a, b):
-    """Return Manhatten distance between a and b
+def manhattan_distance(a, b):
+    """Return Manhattan distance between a and b
     """
     return sum(abs(a-b))
+
+
+@deprecated("Use correctly spelled manhattan_distance instead")
+def manhatten_distance(a, b):
+    return manhattan_distance(a, b)
 
 
 def mahalanobis_distance(x, y=None, w=None):
@@ -341,9 +347,13 @@ def pnorm_w_python(data1, data2=None, weight=None, p=2,
     return af(d)
 
 
-if externals.exists('weave'):
-    from scipy import weave
-    from scipy.weave import converters
+if externals.exists('weave') or externals.exists('scipy.weave') :
+    if externals.exists('weave'):
+        import weave
+        from weave import converters
+    else:
+        from scipy import weave
+        from scipy.weave import converters
 
     def pnorm_w(data1, data2=None, weight=None, p=2):
         """Weighted p-norm between two datasets (scipy.weave implementation)
