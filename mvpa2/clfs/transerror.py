@@ -35,7 +35,7 @@ if __debug__:
     from mvpa2.base import debug
 
 if externals.exists('scipy'):
-    from scipy.stats.stats import nanmean
+    from numpy import nanmean
     from mvpa2.misc.stats import chisquare
     from scipy.stats import linregress, friedmanchisquare
     from mvpa2.misc.errorfx import corr_error, corr_error_prob
