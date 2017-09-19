@@ -1,6 +1,6 @@
 #ifndef _LIBSVM_H
 #define _LIBSVM_H
-#define _DENSE_REP
+//#define _DENSE_REP
 #define LIBSVM_VERSION 317
 
 #ifdef __cplusplus

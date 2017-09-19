@@ -120,11 +120,16 @@ GENCODE_FLAGS   := $(GENCODE_SM10) $(GENCODE_SM20) $(GENCODE_SM30)
 
 ################################################################################
 
+TDIR=../../build/libsvm
+LIB=libsvm.a
+MISC=svm.cpp
+
 
 # Target rules
-all: build
+all: build $(LIB)
 
 build: svm-train-gpu
+
 
 svm-train-gpu.o: svm.cpp svm-train.o
 	$(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
@@ -137,8 +142,15 @@ svm-train-gpu: svm.o svm-train.o
 run: build
 	./svm-train-gpu
 
+$(LIB): $(MISC:.cpp=.o)
+	mkdir -p $(TDIR)
+	cp svm.o $(TDIR)
+	ar cur $(TDIR)/$@ $(TDIR)/$^
+
+
 clean:
 	rm -f svm-train-gpu.o svm-train-gpu
 	rm -rf /bin/$(OS_ARCH)/$(OSLOWER)/$(TARGET)$(if $(abi),/$(abi))/svm-train-gpu
 
 clobber: clean
+
