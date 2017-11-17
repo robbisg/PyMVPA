@@ -1,7 +1,7 @@
 #ifndef _LIBSVM_H
 #define _LIBSVM_H
-
-#define LIBSVM_VERSION 312
+//#define _DENSE_REP
+#define LIBSVM_VERSION 317
 
 #ifdef __cplusplus
 extern "C" {
@@ -9,6 +9,21 @@ extern "C" {
 
 extern int libsvm_version;
 
+#ifdef _DENSE_REP
+struct svm_node
+{
+	int dim;
+	double *values;
+};
+
+struct svm_problem
+{
+	int l;
+	double *y;
+	struct svm_node *x;
+};
+
+#else
 struct svm_node
 {
 	int index;
@@ -21,6 +36,7 @@ struct svm_problem
 	double *y;
 	struct svm_node **x;
 };
+#endif
 
 enum { C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR };	/* svm_type */
 enum { LINEAR, POLY, RBF, SIGMOID, PRECOMPUTED }; /* kernel_type */
@@ -54,12 +70,17 @@ struct svm_model
 	struct svm_parameter param;	/* parameter */
 	int nr_class;		/* number of classes, = 2 in regression/one class svm */
 	int l;			/* total #SV */
+#ifdef _DENSE_REP
+	struct svm_node *SV;		/* SVs (SV[l]) */
+#else
 	struct svm_node **SV;		/* SVs (SV[l]) */
+#endif
 	double **sv_coef;	/* coefficients for SVs in decision functions (sv_coef[k-1][l]) */
 	double *rho;		/* constants in decision functions (rho[k*(k-1)/2]) */
 	double *probA;		/* pariwise probability information */
 	double *probB;
-
+	int *sv_indices;        /* sv_indices[0,...,nSV-1] are values in [1,...,num_traning_data] to indicate SVs in the training set */
+	
 	/* for classification only */
 
 	int *label;		/* label of each class (label[k]) */
@@ -79,6 +100,8 @@ struct svm_model *svm_load_model(const char *model_file_name);
 int svm_get_svm_type(const struct svm_model *model);
 int svm_get_nr_class(const struct svm_model *model);
 void svm_get_labels(const struct svm_model *model, int *label);
+void svm_get_sv_indices(const struct svm_model *model, int *sv_indices);
+int svm_get_nr_sv(const struct svm_model *model);
 double svm_get_svr_probability(const struct svm_model *model);
 
 double svm_predict_values(const struct svm_model *model, const struct svm_node *x, double* dec_values);
